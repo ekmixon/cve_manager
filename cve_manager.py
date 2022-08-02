@@ -104,11 +104,11 @@ def create_database(myuser,myhost,database, owner):
             dbname = database
             con.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
             cur = con.cursor()
-            cur.execute('CREATE DATABASE ' + dbname)
+            cur.execute(f'CREATE DATABASE {dbname}')
             print("Database",database,"was created.")
             cur = con.cursor()
-            query = '''ALTER DATABASE '''+ database + ''' OWNER TO ''' + owner+''';'''
-            print("Owner of the database changed to:",owner) 
+            query = f'''ALTER DATABASE {database} OWNER TO {owner};'''
+            print("Owner of the database changed to:",owner)
             cur.execute(query)
             con.commit()
         except (Exception, psycopg2.DatabaseError) as error :
@@ -132,7 +132,7 @@ def drop_database(myuser,myhost,database):
             con = connect(dbname='postgres', user=myuser, host = myhost, password=mypassword)
             con.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
             cur = con.cursor()
-            cur.execute('DROP DATABASE ' + database)
+            cur.execute(f'DROP DATABASE {database}')
             print("Database",database,"was dropped.")
         except (Exception, psycopg2.DatabaseError) as error :
             print ("Error while dropping PostgreSQL Database", error)
@@ -157,7 +157,7 @@ def create_tables(myuser,myhost,database):
             create_tables_query = query
             cursor.execute(create_tables_query)
             con.commit()
-            print("Tables and Views created successfully for database: "+database)
+            print(f"Tables and Views created successfully for database: {database}")
         except (Exception, psycopg2.DatabaseError) as error :
             print ("Error while creating PostgreSQL tables", error)
         finally:
@@ -174,29 +174,36 @@ def download_cves(directory,year):
         try:
             os.makedirs(directory)
         except OSError:
-            print ('Error: Creating directory. ' + directory)
+            print(f'Error: Creating directory. {directory}')
             exit(0)
         else:  
-            print ("Successfully created the directory %s" % directory)
+            print(f"Successfully created the directory {directory}")
     else:
-        print ("Directory %s already exists" % directory)
+        print(f"Directory {directory} already exists")
     try:
         r = requests.get('https://nvd.nist.gov/vuln/data-feeds#JSON_FEED')
     except Exception as e:
         print(e)
     if year:
         print("downloading ",year," only")
-        filename = "nvdcve-1.1-"+year+".json.zip"
+        filename = f"nvdcve-1.1-{year}.json.zip"
         print(filename)
-        r_file = requests.get("https://nvd.nist.gov/feeds/json/cve/1.1/" + filename, stream=True)
-        with open(directory +"/" + filename, 'wb') as f:
+        r_file = requests.get(
+            f"https://nvd.nist.gov/feeds/json/cve/1.1/{filename}", stream=True
+        )
+
+        with open(f"{directory}/{filename}", 'wb') as f:
             for chunk in r_file:
                 f.write(chunk)
     else:
         for filename in re.findall("nvdcve-1.1-[0-9]*\.json\.zip",r.text):
             print(filename)
-            r_file = requests.get("https://nvd.nist.gov/feeds/json/cve/1.1/" + filename, stream=True)
-            with open(directory +"/" + filename, 'wb') as f:
+            r_file = requests.get(
+                f"https://nvd.nist.gov/feeds/json/cve/1.1/{filename}",
+                stream=True,
+            )
+
+            with open(f"{directory}/{filename}", 'wb') as f:
                 for chunk in r_file:
                     f.write(chunk)
 
